@@ -28,7 +28,15 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        // Redirect admins to the admin requests index by default.
+        // `redirect()->intended()` will send the user to the originally intended URL
+        // (if present in session), otherwise it will use the provided default.
+        $user = $request->user();
+        $default = $user && ($user->is_admin ?? false)
+            ? route('admin.document-requests.index', absolute: false)
+            : route('dashboard', absolute: false);
+
+        return redirect()->intended($default);
     }
 
     /**
