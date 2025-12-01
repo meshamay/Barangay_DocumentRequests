@@ -60,7 +60,14 @@ class DocumentRequestController extends Controller
      */
     public function show(DocumentRequest $documentRequest): View
     {
-        $this->authorize('view', $documentRequest);
+        // Allow the owner or an admin to view the request. The routes are protected by
+        // the `auth` middleware, but we perform an explicit check here to avoid
+        // relying on a separately defined policy which may not exist.
+        $user = auth()->user();
+
+        if (! $user || ($user->id !== $documentRequest->user_id && ! ($user->is_admin ?? false))) {
+            abort(403);
+        }
 
         return view('document-requests.show', compact('documentRequest'));
     }
